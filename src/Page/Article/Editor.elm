@@ -13,7 +13,6 @@ import Http
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Loading
-import Page
 import Profile exposing (Profile)
 import Route
 import Session exposing (Session)

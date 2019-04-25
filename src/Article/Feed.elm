@@ -6,13 +6,13 @@ import Article.Slug as ArticleSlug exposing (Slug)
 import Article.Tag as Tag exposing (Tag)
 import Author
 import Avatar exposing (Avatar)
+import Frame
 import Html exposing (..)
 import Html.Attributes exposing (attribute, class, classList, href, id, placeholder, src)
 import Html.Events exposing (onClick)
 import Http
 import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Pipeline exposing (required)
-import Page
 import PaginatedList exposing (PaginatedList)
 import Profile
 import Route exposing (Route)
@@ -85,7 +85,7 @@ viewArticles timeZone (Model { articles, session, errors }) =
             PaginatedList.values articles
                 |> List.map (viewPreview maybeCred timeZone)
     in
-    Page.viewErrors ClickedDismissErrors errors :: articlesHtml
+    Frame.viewErrors ClickedDismissErrors errors :: articlesHtml
 
 
 viewPreview : Maybe Cred -> Time.Zone -> Article Preview -> Html Msg
