@@ -9,12 +9,12 @@ import Article exposing (Article, Preview)
 import Article.Feed as Feed
 import Author exposing (Author(..), FollowedAuthor, UnfollowedAuthor)
 import Avatar exposing (Avatar)
+import Frame
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http
 import Loading
 import Log
-import Page
 import PaginatedList exposing (PaginatedList)
 import Profile exposing (Profile)
 import Route
@@ -195,7 +195,7 @@ view model =
                                 text ""
                 in
                 div [ class "profile-page" ]
-                    [ Page.viewErrors ClickedDismissErrors model.errors
+                    [ Frame.viewErrors ClickedDismissErrors model.errors
                     , div [ class "user-info" ]
                         [ div [ class "container" ]
                             [ div [ class "row" ]

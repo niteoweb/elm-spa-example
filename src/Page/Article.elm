@@ -13,6 +13,7 @@ import Author exposing (Author(..), FollowedAuthor, UnfollowedAuthor)
 import Avatar
 import Browser.Navigation as Nav
 import CommentId exposing (CommentId)
+import Frame
 import Html exposing (..)
 import Html.Attributes exposing (attribute, class, disabled, href, id, placeholder, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
@@ -20,7 +21,6 @@ import Http
 import Json.Decode as Decode
 import Loading
 import Log
-import Page
 import Profile exposing (Profile)
 import Route
 import Session exposing (Session)
@@ -129,7 +129,7 @@ view model =
                                         ]
                                     ]
                                     buttons
-                            , Page.viewErrors ClickedDismissErrors model.errors
+                            , Frame.viewErrors ClickedDismissErrors model.errors
                             ]
                         ]
                     , div [ class "container page" ]

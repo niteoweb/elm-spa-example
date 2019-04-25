@@ -5,9 +5,9 @@ import Article.Slug exposing (Slug)
 import Avatar exposing (Avatar)
 import Browser exposing (Document)
 import Browser.Navigation as Nav
+import Frame exposing (NavbarIndicator(..))
 import Html exposing (..)
 import Json.Decode as Decode exposing (Value)
-import Page exposing (Page)
 import Page.Article as Article
 import Page.Article.Editor as Editor
 import Page.Blank as Blank
@@ -66,7 +66,7 @@ view model =
         viewPage page toMsg config =
             let
                 { title, body } =
-                    Page.view (Session.viewer (toSession model)) page config
+                    Frame.view (Session.viewer (toSession model)) page config
             in
             { title = title
             , body = List.map (Html.map toMsg) body
@@ -74,34 +74,64 @@ view model =
     in
     case model of
         Redirect _ ->
-            viewPage Page.Other (\_ -> Ignored) Blank.view
+            viewPage
+                Frame.None
+                (\_ -> Ignored)
+                Blank.view
 
         NotFound _ ->
-            viewPage Page.Other (\_ -> Ignored) NotFound.view
+            viewPage
+                Frame.None
+                (\_ -> Ignored)
+                NotFound.view
 
         Settings settings ->
-            viewPage Page.Other GotSettingsMsg (Settings.view settings)
+            viewPage
+                Frame.None
+                GotSettingsMsg
+                (Settings.view settings)
 
         Home home ->
-            viewPage Page.Home GotHomeMsg (Home.view home)
+            viewPage
+                Frame.Home
+                GotHomeMsg
+                (Home.view home)
 
         Login login ->
-            viewPage Page.Login GotLoginMsg (Login.view login)
+            viewPage
+                Frame.Login
+                GotLoginMsg
+                (Login.view login)
 
         Register register ->
-            viewPage Page.Register GotRegisterMsg (Register.view register)
+            viewPage
+                Frame.Register
+                GotRegisterMsg
+                (Register.view register)
 
         Profile username profile ->
-            viewPage (Page.Profile username) GotProfileMsg (Profile.view profile)
+            viewPage
+                (Frame.Profile username)
+                GotProfileMsg
+                (Profile.view profile)
 
         Article article ->
-            viewPage Page.Other GotArticleMsg (Article.view article)
+            viewPage
+                Frame.None
+                GotArticleMsg
+                (Article.view article)
 
         Editor Nothing editor ->
-            viewPage Page.NewArticle GotEditorMsg (Editor.view editor)
+            viewPage
+                Frame.NewArticle
+                GotEditorMsg
+                (Editor.view editor)
 
         Editor (Just _) editor ->
-            viewPage Page.Other GotEditorMsg (Editor.view editor)
+            viewPage
+                Frame.None
+                GotEditorMsg
+                (Editor.view editor)
 
 
 
