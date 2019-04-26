@@ -18,7 +18,7 @@ import Viewer exposing (Viewer)
 
 Note that we don't enumerate every page here, because the navbar doesn't
 have links for every page. Anything that's not part of the navbar falls
-under Other.
+under None.
 
 -}
 type NavbarIndicator
@@ -40,31 +40,60 @@ isLoading is for determining whether we should show a loading spinner
 in the header. (This comes up during slow page transitions.)
 
 -}
-view : Maybe Viewer -> NavbarIndicator -> { title : String, content : Html msg } -> Document msg
-view maybeViewer page { title, content } =
+view :
+    Maybe Viewer
+    -> NavbarIndicator
+    -> Navbar.Config msg
+    -> Navbar.State
+    -> { title : String, content : Html msg }
+    -> Document msg
+view maybeViewer navbarIndicator navbarConfig navbarState { title, content } =
+    let
+        header : Html msg
+        header =
+            viewHeader
+                navbarIndicator
+                navbarConfig
+                navbarState
+                maybeViewer
+
+        footer : Html msg
+        footer =
+            viewFooter
+    in
     { title = title ++ " - Conduit"
-    , body = viewHeader page maybeViewer :: content :: [ viewFooter ]
+    , body =
+        [ header
+        , content
+        , footer
+        ]
     }
 
 
-viewHeader : NavbarIndicator -> Maybe Viewer -> Html msg
-viewHeader page maybeViewer =
-    nav [ class "navbar navbar-light" ]
-        [ div [ class "container" ]
-            [ a [ class "navbar-brand", Route.href Route.Home ]
-                [ text "conduit" ]
-            , ul [ class "nav navbar-nav pull-xs-right" ] <|
-                navbarLink page Route.Home [ text "Home" ]
-                    :: viewMenu page maybeViewer
-            ]
-        ]
+viewHeader :
+    NavbarIndicator
+    -> Navbar.Config msg
+    -> Navbar.State
+    -> Maybe Viewer
+    -> Html msg
+viewHeader navbarIndicator navbarConfig navbarState maybeViewer =
+    navbarConfig
+        |> Navbar.light
+        |> Navbar.collapseSmall
+        |> Navbar.withAnimation
+        |> Navbar.brand [ Route.href Route.Home ] [ Html.text "conduit" ]
+        |> Navbar.items
+            (navbarLink navbarIndicator Route.Home [ text "Home" ]
+                :: viewMenu navbarIndicator maybeViewer
+            )
+        |> Navbar.view navbarState
 
 
-viewMenu : NavbarIndicator -> Maybe Viewer -> List (Html msg)
-viewMenu page maybeViewer =
+viewMenu : NavbarIndicator -> Maybe Viewer -> List (Navbar.Item msg)
+viewMenu navbarIndicator maybeViewer =
     let
         linkTo =
-            navbarLink page
+            navbarLink navbarIndicator
     in
     case maybeViewer of
         Just viewer ->
@@ -105,15 +134,18 @@ viewFooter =
         ]
 
 
-navbarLink : NavbarIndicator -> Route -> List (Html msg) -> Html msg
-navbarLink page route linkContent =
-    li [ classList [ ( "nav-item", True ), ( "active", isActive page route ) ] ]
-        [ a [ class "nav-link", Route.href route ] linkContent ]
+navbarLink : NavbarIndicator -> Route -> List (Html msg) -> Navbar.Item msg
+navbarLink navbarIndicator route linkContent =
+    if isActive navbarIndicator route then
+        Navbar.itemLinkActive [ Route.href route ] linkContent
+
+    else
+        Navbar.itemLink [ Route.href route ] linkContent
 
 
 isActive : NavbarIndicator -> Route -> Bool
-isActive page route =
-    case ( page, route ) of
+isActive navbarIndicator route =
+    case ( navbarIndicator, route ) of
         ( Home, Route.Home ) ->
             True
 
