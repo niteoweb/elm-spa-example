@@ -3,6 +3,7 @@ module Main exposing (main)
 import Api exposing (Cred)
 import Article.Slug exposing (Slug)
 import Avatar exposing (Avatar)
+import Bootstrap.Navbar
 import Browser exposing (Document)
 import Browser.Navigation as Nav
 import Frame exposing (NavbarIndicator(..))
@@ -34,7 +35,13 @@ import Viewer exposing (Viewer)
 -- See https://discourse.elm-lang.org/t/elm-spa-in-0-19/1800/2 for more.
 
 
-type Model
+type alias Model =
+    { page : Page
+    , navbar : Bootstrap.Navbar.State
+    }
+
+
+type Page
     = Redirect Session
     | NotFound Session
     | Home Home.Model
@@ -52,8 +59,22 @@ type Model
 
 init : Maybe Viewer -> Url -> Nav.Key -> ( Model, Cmd Msg )
 init maybeViewer url navKey =
-    changeRouteTo (Route.fromUrl url)
-        (Redirect (Session.fromViewer navKey maybeViewer))
+    let
+        ( model, routingCmd ) =
+            changeRouteTo (Route.fromUrl url)
+                { page = Redirect (Session.fromViewer navKey maybeViewer)
+                , navbar = navbar
+                }
+
+        ( navbar, navbarCmd ) =
+            Bootstrap.Navbar.initialState GotNavbarMsg
+    in
+    ( model
+    , Cmd.batch
+        [ navbarCmd
+        , routingCmd
+        ]
+    )
 
 
 
@@ -63,16 +84,36 @@ init maybeViewer url navKey =
 view : Model -> Document Msg
 view model =
     let
-        viewPage page toMsg config =
+        viewPage :
+            NavbarIndicator
+            -> (msg -> Msg)
+            ->
+                { title : String
+                , content : Html msg
+                }
+            -> Document Msg
+        viewPage navbarIndicator toMsg pageContent =
             let
                 { title, body } =
-                    Frame.view (Session.viewer (toSession model)) page config
+                    Frame.view
+                        (Session.viewer (toSession model.page))
+                        navbarIndicator
+                        navbarConfig
+                        model.navbar
+                        { title = pageContent.title
+                        , content =
+                            Html.map toMsg pageContent.content
+                        }
+
+                navbarConfig : Bootstrap.Navbar.Config Msg
+                navbarConfig =
+                    Bootstrap.Navbar.config GotNavbarMsg
             in
             { title = title
-            , body = List.map (Html.map toMsg) body
+            , body = body
             }
     in
-    case model of
+    case model.page of
         Redirect _ ->
             viewPage
                 Frame.None
@@ -151,9 +192,10 @@ type Msg
     | GotArticleMsg Article.Msg
     | GotEditorMsg Editor.Msg
     | GotSession Session
+    | GotNavbarMsg Bootstrap.Navbar.State
 
 
-toSession : Model -> Session
+toSession : Page -> Session
 toSession page =
     case page of
         Redirect session ->
@@ -188,11 +230,13 @@ changeRouteTo : Maybe Route -> Model -> ( Model, Cmd Msg )
 changeRouteTo maybeRoute model =
     let
         session =
-            toSession model
+            toSession model.page
     in
     case maybeRoute of
         Nothing ->
-            ( NotFound session, Cmd.none )
+            ( { model | page = NotFound session }
+            , Cmd.none
+            )
 
         Just Route.Root ->
             ( model, Route.replaceUrl (Session.navKey session) Route.Home )
@@ -235,34 +279,34 @@ changeRouteTo maybeRoute model =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case ( msg, model ) of
+    case ( msg, model.page ) of
         ( Ignored, _ ) ->
             ( model, Cmd.none )
 
-        ( ClickedLink urlRequest, _ ) ->
-            case urlRequest of
-                Browser.Internal url ->
-                    case url.fragment of
-                        Nothing ->
-                            -- If we got a link that didn't include a fragment,
-                            -- it's from one of those (href "") attributes that
-                            -- we have to include to make the RealWorld CSS work.
-                            --
-                            -- In an application doing path routing instead of
-                            -- fragment-based routing, this entire
-                            -- `case url.fragment of` expression this comment
-                            -- is inside would be unnecessary.
-                            ( model, Cmd.none )
+        ( ClickedLink (Browser.Internal url), _ ) ->
+            case url.fragment of
+                Nothing ->
+                    -- If we got a link that didn't include a fragment,
+                    -- it's from one of those (href "") attributes that
+                    -- we have to include to make the RealWorld CSS work.
+                    --
+                    -- In an application doing path routing instead of
+                    -- fragment-based routing, this entire
+                    -- `case url.fragment of` expression this comment
+                    -- is inside would be unnecessary.
+                    ( model, Cmd.none )
 
-                        Just _ ->
-                            ( model
-                            , Nav.pushUrl (Session.navKey (toSession model)) (Url.toString url)
-                            )
-
-                Browser.External href ->
+                Just _ ->
                     ( model
-                    , Nav.load href
+                    , Nav.pushUrl
+                        (Session.navKey (toSession model.page))
+                        (Url.toString url)
                     )
+
+        ( ClickedLink (Browser.External href), _ ) ->
+            ( model
+            , Nav.load href
+            )
 
         ( ChangedUrl url, _ ) ->
             changeRouteTo (Route.fromUrl url) model
@@ -299,8 +343,15 @@ update msg model =
                 |> updateWith (Editor slug) GotEditorMsg model
 
         ( GotSession session, Redirect _ ) ->
-            ( Redirect session
+            ( { model | page = Redirect session }
             , Route.replaceUrl (Session.navKey session) Route.Home
+            )
+
+        ( GotNavbarMsg navbar, _ ) ->
+            ( { model
+                | navbar = navbar
+              }
+            , Cmd.none
             )
 
         ( _, _ ) ->
@@ -308,9 +359,14 @@ update msg model =
             ( model, Cmd.none )
 
 
-updateWith : (subModel -> Model) -> (subMsg -> Msg) -> Model -> ( subModel, Cmd subMsg ) -> ( Model, Cmd Msg )
-updateWith toModel toMsg model ( subModel, subCmd ) =
-    ( toModel subModel
+updateWith :
+    (subModel -> Page)
+    -> (subMsg -> Msg)
+    -> Model
+    -> ( subModel, Cmd subMsg )
+    -> ( Model, Cmd Msg )
+updateWith toPage toMsg model ( subModel, subCmd ) =
+    ( { model | page = toPage subModel }
     , Cmd.map toMsg subCmd
     )
 
@@ -321,33 +377,40 @@ updateWith toModel toMsg model ( subModel, subCmd ) =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    case model of
-        NotFound _ ->
-            Sub.none
+    let
+        pageSubscription =
+            case model.page of
+                NotFound _ ->
+                    Sub.none
 
-        Redirect _ ->
-            Session.changes GotSession (Session.navKey (toSession model))
+                Redirect _ ->
+                    Session.changes GotSession (Session.navKey (toSession model.page))
 
-        Settings settings ->
-            Sub.map GotSettingsMsg (Settings.subscriptions settings)
+                Settings settings ->
+                    Sub.map GotSettingsMsg (Settings.subscriptions settings)
 
-        Home home ->
-            Sub.map GotHomeMsg (Home.subscriptions home)
+                Home home ->
+                    Sub.map GotHomeMsg (Home.subscriptions home)
 
-        Login login ->
-            Sub.map GotLoginMsg (Login.subscriptions login)
+                Login login ->
+                    Sub.map GotLoginMsg (Login.subscriptions login)
 
-        Register register ->
-            Sub.map GotRegisterMsg (Register.subscriptions register)
+                Register register ->
+                    Sub.map GotRegisterMsg (Register.subscriptions register)
 
-        Profile _ profile ->
-            Sub.map GotProfileMsg (Profile.subscriptions profile)
+                Profile _ profile ->
+                    Sub.map GotProfileMsg (Profile.subscriptions profile)
 
-        Article article ->
-            Sub.map GotArticleMsg (Article.subscriptions article)
+                Article article ->
+                    Sub.map GotArticleMsg (Article.subscriptions article)
 
-        Editor _ editor ->
-            Sub.map GotEditorMsg (Editor.subscriptions editor)
+                Editor _ editor ->
+                    Sub.map GotEditorMsg (Editor.subscriptions editor)
+    in
+    Sub.batch
+        [ pageSubscription
+        , Bootstrap.Navbar.subscriptions model.navbar GotNavbarMsg
+        ]
 
 
 
