@@ -2,7 +2,11 @@ module Frame exposing (NavbarIndicator(..), view, viewErrors)
 
 import Api exposing (Cred)
 import Avatar
+import Bootstrap.Grid as Grid
+import Bootstrap.Grid.Col as Col
 import Bootstrap.Navbar as Navbar
+import Bootstrap.Text as Text
+import Bootstrap.Utilities.Spacing as Spacing
 import Browser exposing (Document)
 import Html exposing (Html, a, button, div, footer, i, img, li, nav, p, span, text, ul)
 import Html.Attributes exposing (class, classList, href, style)
@@ -78,7 +82,8 @@ viewHeader :
     -> Html msg
 viewHeader navbarIndicator navbarConfig navbarState maybeViewer =
     navbarConfig
-        |> Navbar.light
+        |> Navbar.dark
+        |> Navbar.container
         |> Navbar.collapseSmall
         |> Navbar.withAnimation
         |> Navbar.brand
@@ -124,13 +129,30 @@ viewMenu navbarIndicator maybeViewer =
 
 viewFooter : Html msg
 viewFooter =
-    footer []
-        [ div [ class "container" ]
-            [ a [ class "logo-font", href "/" ] [ text "conduit" ]
-            , span [ class "attribution" ]
-                [ text "An interactive learning project from "
-                , a [ href "https://thinkster.io" ] [ text "Thinkster" ]
-                , text ". Code & design licensed under MIT."
+    footer
+        [ Spacing.mtAuto, Spacing.p3 ]
+        [ Grid.container
+            []
+            [ Grid.row
+                []
+                [ Grid.col
+                    [ Col.md2 ]
+                    [ a
+                        [ class "logo-font"
+                        , href "/"
+                        ]
+                        [ text "conduit" ]
+                    ]
+                , Grid.col
+                    [ Col.md10
+                    , Col.textAlign Text.alignMdRight
+                    ]
+                    [ p []
+                        [ text "An interactive learning project from "
+                        , a [ href "https://thinkster.io" ] [ text "Thinkster" ]
+                        , text ". Code & design licensed under MIT."
+                        ]
+                    ]
                 ]
             ]
         ]

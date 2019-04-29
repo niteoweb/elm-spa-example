@@ -1,5 +1,14 @@
 @import "../node_modules/bootstrap/scss/bootstrap.scss";
 
+html {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
 
 .navbar {
   // Scale and align user picture in the navbar 
