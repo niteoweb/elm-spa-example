@@ -11,6 +11,7 @@ import Article.Tag as Tag exposing (Tag)
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Text as Text
+import Bootstrap.Utilities.Display as Display
 import Bootstrap.Utilities.Spacing as Spacing
 import Browser.Dom as Dom
 import Html exposing (..)
@@ -227,7 +228,8 @@ viewTags tags =
 viewTag : Tag -> Html Msg
 viewTag tagName =
     a
-        [ class "tag-pill tag-default"
+        [ class "badge badge-pill badge-secondary"
+        , Spacing.mx1
         , onClick (ClickedTag tagName)
 
         -- The RealWorld CSS requires an href to work properly.
