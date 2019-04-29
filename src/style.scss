@@ -1,0 +1,15 @@
+@import "../node_modules/bootstrap/scss/bootstrap.scss";
+
+
+.navbar {
+  // Scale and align user picture in the navbar 
+  .user-pic {
+    height: 1em;
+    margin-right: 0.6em;
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+  }
+}

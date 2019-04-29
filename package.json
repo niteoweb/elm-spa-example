@@ -22,6 +22,10 @@
   "devDependencies": {
     "elm-hot": "^1.0.1",
     "node-elm-compiler": "^5.0.3",
-    "parcel": "^1.12.3"
+    "parcel": "^1.12.3",
+    "sass": "^1.19.0"
+  },
+  "dependencies": {
+    "bootstrap": "^4.3.1"
   }
 }
