@@ -81,11 +81,11 @@ viewHeader navbarIndicator navbarConfig navbarState maybeViewer =
         |> Navbar.light
         |> Navbar.collapseSmall
         |> Navbar.withAnimation
-        |> Navbar.brand [ Route.href Route.Home ] [ Html.text "conduit" ]
+        |> Navbar.brand
+            [ Route.href Route.Home ]
+            [ Html.text "conduit" ]
         |> Navbar.items
-            (navbarLink navbarIndicator Route.Home [ text "Home" ]
-                :: viewMenu navbarIndicator maybeViewer
-            )
+            (viewMenu navbarIndicator maybeViewer)
         |> Navbar.view navbarState
 
 
@@ -104,7 +104,8 @@ viewMenu navbarIndicator maybeViewer =
                 avatar =
                     Viewer.avatar viewer
             in
-            [ linkTo Route.NewArticle [ i [ class "ion-compose" ] [], text "\u{00A0}New Post" ]
+            [ linkTo Route.Home [ text "Home" ]
+            , linkTo Route.NewArticle [ i [ class "ion-compose" ] [], text "\u{00A0}New Post" ]
             , linkTo Route.Settings [ i [ class "ion-gear-a" ] [], text "\u{00A0}Settings" ]
             , linkTo
                 (Route.Profile username)
@@ -115,7 +116,8 @@ viewMenu navbarIndicator maybeViewer =
             ]
 
         Nothing ->
-            [ linkTo Route.Login [ text "Sign in" ]
+            [ linkTo Route.Home [ text "Home" ]
+            , linkTo Route.Login [ text "Sign in" ]
             , linkTo Route.Register [ text "Sign up" ]
             ]
 
@@ -158,8 +160,8 @@ isActive navbarIndicator route =
         ( Settings, Route.Settings ) ->
             True
 
-        ( Profile pageUsername, Route.Profile routeUsername ) ->
-            pageUsername == routeUsername
+        ( Profile indicatorUsername, Route.Profile routeUsername ) ->
+            indicatorUsername == routeUsername
 
         ( NewArticle, Route.NewArticle ) ->
             True
