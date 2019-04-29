@@ -8,6 +8,10 @@ import Api.Endpoint as Endpoint
 import Article exposing (Article, Preview)
 import Article.Feed as Feed
 import Article.Tag as Tag exposing (Tag)
+import Bootstrap.Grid as Grid
+import Bootstrap.Grid.Col as Col
+import Bootstrap.Text as Text
+import Bootstrap.Utilities.Spacing as Spacing
 import Browser.Dom as Dom
 import Html exposing (..)
 import Html.Attributes exposing (attribute, class, classList, href, id, placeholder)
@@ -144,10 +148,19 @@ view model =
 
 viewBanner : Html msg
 viewBanner =
-    div [ class "banner" ]
-        [ div [ class "container" ]
-            [ h1 [ class "logo-font" ] [ text "conduit" ]
-            , p [] [ text "A place to share your knowledge." ]
+    div
+        [ class "banner"
+        , Spacing.m5
+        ]
+        [ Grid.container []
+            [ Grid.row
+                []
+                [ Grid.col
+                    [ Col.textAlign Text.alignXsCenter ]
+                    [ h1 [ class "logo-font display-1" ] [ text "conduit" ]
+                    , p [] [ text "A place to share your knowledge." ]
+                    ]
+                ]
             ]
         ]
 
