@@ -6,6 +6,13 @@ import Article.Slug as ArticleSlug exposing (Slug)
 import Article.Tag as Tag exposing (Tag)
 import Author
 import Avatar exposing (Avatar)
+import Bootstrap.Badge as Badge
+import Bootstrap.Grid as Grid
+import Bootstrap.Grid.Col as Col
+import Bootstrap.Text as Text
+import Bootstrap.Utilities.Display as Display
+import Bootstrap.Utilities.Flex as Flex
+import Bootstrap.Utilities.Spacing as Spacing
 import Frame
 import Html exposing (..)
 import Html.Attributes exposing (attribute, class, classList, href, id, placeholder, src)
@@ -126,22 +133,47 @@ viewPreview maybeCred timeZone article =
                 Nothing ->
                     text ""
     in
-    div [ class "article-preview" ]
-        [ div [ class "article-meta" ]
-            [ a [ Route.href (Route.Profile username) ]
-                [ img [ Avatar.src (Profile.avatar profile) ] [] ]
-            , div [ class "info" ]
-                [ Author.view username
-                , Timestamp.view timeZone createdAt
+    Grid.container
+        [ class "article-preview my-5 border-bottom" ]
+        [ Grid.row
+            []
+            [ Grid.col
+                [ Col.xl1 ]
+                [ a [ Route.href (Route.Profile username) ]
+                    [ img
+                        [ Avatar.src (Profile.avatar profile)
+                        , class "img-fluid rounded-circle"
+                        ]
+                        []
+                    ]
                 ]
-            , faveButton
+            , Grid.col
+                [ Col.xl9 ]
+                [ a
+                    [ Route.href (Route.Profile username) ]
+                    [ Author.view username ]
+                , Html.br [] []
+                , span
+                    [ class "text-muted small" ]
+                    [ Timestamp.view timeZone createdAt ]
+                ]
+            , Grid.col
+                [ Col.xl2, Col.textAlign Text.alignXsRight ]
+                [ faveButton ]
             ]
-        , a [ class "preview-link", Route.href (Route.Article (Article.slug article)) ]
-            [ h1 [] [ text title ]
-            , p [] [ text description ]
-            , span [] [ text "Read more..." ]
-            , ul [ class "tag-list" ]
-                (List.map viewTag (Article.metadata article).tags)
+        , Grid.row
+            []
+            [ Grid.col [ Col.xl12 ]
+                [ h1 [] [ text title ]
+                , p [] [ text description ]
+                , a
+                    [ class "preview-link stretched-link"
+                    , Route.href (Route.Article (Article.slug article))
+                    ]
+                    [ text "Read more..." ]
+                , ul [ class "tag-list list-inline text-right" ]
+                    (List.map viewTag (Article.metadata article).tags)
+                ]
             ]
         ]
 
@@ -203,7 +235,7 @@ pageLink toMsg targetPage isActive =
 
 viewTag : String -> Html msg
 viewTag tagName =
-    li [ class "tag-default tag-pill tag-outline" ] [ text tagName ]
+    Badge.pillLight [ Spacing.mx1 ] [ text tagName ]
 
 
 
