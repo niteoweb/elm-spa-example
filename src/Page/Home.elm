@@ -1,4 +1,12 @@
-module Page.Home exposing (Model, Msg, init, subscriptions, toSession, update, view)
+module Page.Home exposing
+    ( Model
+    , Msg
+    , init
+    , subscriptions
+    , toSession
+    , update
+    , view
+    )
 
 {-| The homepage. You can get here via either the / or /#/ routes.
 -}
@@ -15,7 +23,15 @@ import Bootstrap.Utilities.Display as Display
 import Bootstrap.Utilities.Spacing as Spacing
 import Browser.Dom as Dom
 import Html exposing (..)
-import Html.Attributes exposing (attribute, class, classList, href, id, placeholder)
+import Html.Attributes
+    exposing
+        ( attribute
+        , class
+        , classList
+        , href
+        , id
+        , placeholder
+        )
 import Html.Events exposing (onClick)
 import Http
 import Loading
@@ -95,52 +111,62 @@ init session =
 
 view : Model -> { title : String, content : Html Msg }
 view model =
+    let
+        viewFeedSection =
+            case model.feed of
+                Loaded feed ->
+                    [ div [ class "feed-toggle" ] <|
+                        List.concat
+                            [ [ viewTabs
+                                    (Session.cred model.session)
+                                    model.feedTab
+                              ]
+                            , Feed.viewArticles model.timeZone feed
+                                |> List.map (Html.map GotFeedMsg)
+                            , [ Feed.viewPagination ClickedFeedPage
+                                    model.feedPage
+                                    feed
+                              ]
+                            ]
+                    ]
+
+                Loading ->
+                    []
+
+                LoadingSlowly ->
+                    [ Loading.icon ]
+
+                Failed ->
+                    [ Loading.error "feed" ]
+
+        viewTagsSection =
+            case model.tags of
+                Loaded tags ->
+                    [ div [ class "sidebar" ] <|
+                        [ p [] [ text "Popular Tags" ]
+                        , viewTags tags
+                        ]
+                    ]
+
+                Loading ->
+                    []
+
+                LoadingSlowly ->
+                    [ Loading.icon ]
+
+                Failed ->
+                    [ Loading.error "tags" ]
+    in
     { title = "Conduit"
     , content =
         div [ class "home-page" ]
             [ viewBanner
-            , div [ class "container page" ]
-                [ div [ class "row" ]
-                    [ div [ class "col-md-9" ] <|
-                        case model.feed of
-                            Loaded feed ->
-                                [ div [ class "feed-toggle" ] <|
-                                    List.concat
-                                        [ [ viewTabs
-                                                (Session.cred model.session)
-                                                model.feedTab
-                                          ]
-                                        , Feed.viewArticles model.timeZone feed
-                                            |> List.map (Html.map GotFeedMsg)
-                                        , [ Feed.viewPagination ClickedFeedPage model.feedPage feed ]
-                                        ]
-                                ]
-
-                            Loading ->
-                                []
-
-                            LoadingSlowly ->
-                                [ Loading.icon ]
-
-                            Failed ->
-                                [ Loading.error "feed" ]
-                    , div [ class "col-md-3" ] <|
-                        case model.tags of
-                            Loaded tags ->
-                                [ div [ class "sidebar" ] <|
-                                    [ p [] [ text "Popular Tags" ]
-                                    , viewTags tags
-                                    ]
-                                ]
-
-                            Loading ->
-                                []
-
-                            LoadingSlowly ->
-                                [ Loading.icon ]
-
-                            Failed ->
-                                [ Loading.error "tags" ]
+            , Grid.container
+                [ class "page" ]
+                [ Grid.row
+                    []
+                    [ Grid.col [ Col.md9 ] viewFeedSection
+                    , Grid.col [ Col.md3 ] viewTagsSection
                     ]
                 ]
             ]
@@ -299,7 +325,10 @@ update msg model =
                 Loaded feed ->
                     let
                         ( newFeed, subCmd ) =
-                            Feed.update (Session.cred model.session) subMsg feed
+                            Feed.update
+                                (Session.cred model.session)
+                                subMsg
+                                feed
                     in
                     ( { model | feed = Loaded newFeed }
                     , Cmd.map GotFeedMsg subCmd
@@ -357,7 +386,10 @@ fetchFeed session feedTabs page =
             Feed.decoder maybeCred articlesPerPage
 
         params =
-            PaginatedList.params { page = page, resultsPerPage = articlesPerPage }
+            PaginatedList.params
+                { page = page
+                , resultsPerPage = articlesPerPage
+                }
 
         request =
             case feedTabs of
@@ -372,7 +404,9 @@ fetchFeed session feedTabs page =
                         firstParam =
                             Url.Builder.string "tag" (Tag.toString tag)
                     in
-                    Api.get (Endpoint.articles (firstParam :: params)) maybeCred decoder
+                    Api.get (Endpoint.articles (firstParam :: params))
+                        maybeCred
+                        decoder
     in
     Http.toTask request
         |> Task.map (Feed.init session)
