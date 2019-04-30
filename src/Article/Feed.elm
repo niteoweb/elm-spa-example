@@ -209,11 +209,25 @@ viewPagination toMsg page (Model feed) =
 
         totalPages =
             PaginatedList.total feed.articles
+
+        neighboring : Int -> Int -> List a -> List a
+        neighboring span index list =
+            let
+                bottom =
+                    max 0 (index - span - 1)
+
+                length =
+                    min (List.length list - bottom) (1 + span * 2)
+            in
+            list
+                |> List.drop bottom
+                |> List.take length
     in
     if totalPages > 1 then
         List.range 1 totalPages
+            |> neighboring 2 page
             |> List.map viewPageLink
-            |> ul [ class "pagination" ]
+            |> ul [ class "pagination justify-content-center" ]
 
     else
         Html.text ""
