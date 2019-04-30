@@ -152,7 +152,7 @@ viewTabs :
     -> List ( String, msg )
     -> Html msg
 viewTabs before selected after =
-    ul [ class "nav nav-pills outline-active" ] <|
+    ul [ class "nav nav-tabs outline-active" ] <|
         List.concat
             [ List.map (viewTab []) before
             , [ viewTab [ class "active" ] selected ]
