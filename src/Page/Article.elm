@@ -19,6 +19,11 @@ import Article.Comment as Comment exposing (Comment)
 import Article.Slug as Slug exposing (Slug)
 import Author exposing (Author(..), FollowedAuthor, UnfollowedAuthor)
 import Avatar
+import Bootstrap.Grid as Grid
+import Bootstrap.Grid.Col as Col
+import Bootstrap.Text as Text
+import Bootstrap.Utilities.Display as Display
+import Bootstrap.Utilities.Spacing as Spacing
 import Browser.Navigation as Nav
 import CommentId exposing (CommentId)
 import Frame
@@ -107,7 +112,7 @@ view model =
     case model.article of
         Loaded article ->
             let
-                { title } =
+                { title, createdAt } =
                     Article.metadata article
 
                 author =
@@ -157,15 +162,24 @@ view model =
 
                 viewComments comments =
                     List.map (viewComment model.timeZone slug) comments
-            in
-            { title = title
-            , content =
-                div [ class "article-page" ]
-                    [ div [ class "banner" ]
-                        [ div [ class "container" ]
-                            [ h1 [] [ text title ]
-                            , div [ class "article-meta" ] <|
-                                List.append
+
+                viewBanner =
+                    div
+                        [ class "banner"
+                        , Spacing.m5
+                        ]
+                        [ Grid.container []
+                            [ Grid.row
+                                []
+                                [ Grid.col
+                                    [ Col.xl12
+                                    ]
+                                    [ h1 [] [ text title ] ]
+                                ]
+                            , Grid.row
+                                []
+                                [ Grid.col
+                                    [ Col.xl1 ]
                                     [ a
                                         [ author
                                             |> Author.username
@@ -176,50 +190,72 @@ view model =
                                             [ profile
                                                 |> Profile.avatar
                                                 |> Avatar.src
+                                            , class "img-fluid rounded-circle"
                                             ]
                                             []
                                         ]
-                                    , div [ class "info" ]
-                                        [ Author.view (Author.username author)
-                                        , article
-                                            |> Article.metadata
-                                            |> .createdAt
-                                            |> Timestamp.view model.timeZone
-                                        ]
                                     ]
-                                    buttons
-                            , Frame.viewErrors ClickedDismissErrors model.errors
-                            ]
-                        ]
-                    , div [ class "container page" ]
-                        [ div [ class "row article-content" ]
-                            [ div [ class "col-md-12" ]
-                                [ Article.Body.toHtml (Article.body article) [] ]
-                            ]
-                        , hr [] []
-                        , div [ class "article-actions" ]
-                            [ div [ class "article-meta" ] <|
-                                List.append
+                                , Grid.col
+                                    [ Col.xl11 ]
                                     [ a
                                         [ author
                                             |> Author.username
                                             |> Route.Profile
                                             |> Route.href
                                         ]
-                                        [ img [ Avatar.src avatar ] [] ]
-                                    , div [ class "info" ]
-                                        [ Author.view (Author.username author)
-                                        , article
-                                            |> Article.metadata
-                                            |> .createdAt
-                                            |> Timestamp.view model.timeZone
+                                        [ author
+                                            |> Author.username
+                                            |> Author.view
+                                        ]
+                                    , Html.br [] []
+                                    , span
+                                        [ class "text-muted small" ]
+                                        [ Timestamp.view
+                                            model.timeZone
+                                            createdAt
                                         ]
                                     ]
+                                ]
+                            , Grid.row
+                                []
+                                [ Grid.col
+                                    [ Col.xl12
+                                    , Col.attrs [ Spacing.my3 ]
+                                    ]
                                     buttons
+                                ]
                             ]
-                        , div [ class "row" ]
-                            [ viewCommentsSection ]
                         ]
+
+                viewContent =
+                    Grid.container [ class "article" ]
+                        [ Grid.row
+                            []
+                            [ Grid.col [ Col.xl12 ]
+                                [ model.errors
+                                    |> Frame.viewErrors ClickedDismissErrors
+                                ]
+                            ]
+                        , Grid.row
+                            []
+                            [ Grid.col [ Col.xl12 ]
+                                [ Article.Body.toHtml
+                                    (Article.body article)
+                                    []
+                                ]
+                            ]
+                        , Grid.row
+                            []
+                            [ Grid.col [ Col.xl12 ]
+                                [ viewCommentsSection ]
+                            ]
+                        ]
+            in
+            { title = title
+            , content =
+                div [ class "page-article" ]
+                    [ viewBanner
+                    , viewContent
                     ]
             }
 
