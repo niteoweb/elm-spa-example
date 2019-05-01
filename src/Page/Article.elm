@@ -1,4 +1,12 @@
-module Page.Article exposing (Model, Msg, init, subscriptions, toSession, update, view)
+module Page.Article exposing
+    ( Model
+    , Msg
+    , init
+    , subscriptions
+    , toSession
+    , update
+    , view
+    )
 
 {-| Viewing an individual article.
 -}
@@ -15,7 +23,16 @@ import Browser.Navigation as Nav
 import CommentId exposing (CommentId)
 import Frame
 import Html exposing (..)
-import Html.Attributes exposing (attribute, class, disabled, href, id, placeholder, value)
+import Html.Attributes
+    exposing
+        ( attribute
+        , class
+        , disabled
+        , href
+        , id
+        , placeholder
+        , value
+        )
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Http
 import Json.Decode as Decode
@@ -112,6 +129,34 @@ view model =
 
                         Nothing ->
                             []
+
+                viewCommentsSection =
+                    div [ class "col-xs-12 col-md-8 offset-md-2" ] <|
+                        -- Don't render the comments until the article has
+                        -- loaded!
+                        case model.comments of
+                            Loading ->
+                                []
+
+                            LoadingSlowly ->
+                                [ Loading.icon ]
+
+                            Loaded ( commentText, comments ) ->
+                                -- Don't let users add comments until they can
+                                -- see the existing comments!  Otherwise you
+                                -- may be about to repeat something that's
+                                -- already been said.
+                                (model.session
+                                    |> Session.viewer
+                                    |> viewAddComment slug commentText
+                                )
+                                    :: viewComments comments
+
+                            Failed ->
+                                [ Loading.error "comments" ]
+
+                viewComments comments =
+                    List.map (viewComment model.timeZone slug) comments
             in
             { title = title
             , content =
@@ -121,11 +166,25 @@ view model =
                             [ h1 [] [ text title ]
                             , div [ class "article-meta" ] <|
                                 List.append
-                                    [ a [ Route.href (Route.Profile (Author.username author)) ]
-                                        [ img [ Avatar.src (Profile.avatar profile) ] [] ]
+                                    [ a
+                                        [ author
+                                            |> Author.username
+                                            |> Route.Profile
+                                            |> Route.href
+                                        ]
+                                        [ img
+                                            [ profile
+                                                |> Profile.avatar
+                                                |> Avatar.src
+                                            ]
+                                            []
+                                        ]
                                     , div [ class "info" ]
                                         [ Author.view (Author.username author)
-                                        , Timestamp.view model.timeZone (Article.metadata article).createdAt
+                                        , article
+                                            |> Article.metadata
+                                            |> .createdAt
+                                            |> Timestamp.view model.timeZone
                                         ]
                                     ]
                                     buttons
@@ -141,36 +200,25 @@ view model =
                         , div [ class "article-actions" ]
                             [ div [ class "article-meta" ] <|
                                 List.append
-                                    [ a [ Route.href (Route.Profile (Author.username author)) ]
+                                    [ a
+                                        [ author
+                                            |> Author.username
+                                            |> Route.Profile
+                                            |> Route.href
+                                        ]
                                         [ img [ Avatar.src avatar ] [] ]
                                     , div [ class "info" ]
                                         [ Author.view (Author.username author)
-                                        , Timestamp.view model.timeZone (Article.metadata article).createdAt
+                                        , article
+                                            |> Article.metadata
+                                            |> .createdAt
+                                            |> Timestamp.view model.timeZone
                                         ]
                                     ]
                                     buttons
                             ]
                         , div [ class "row" ]
-                            [ div [ class "col-xs-12 col-md-8 offset-md-2" ] <|
-                                -- Don't render the comments until the article has loaded!
-                                case model.comments of
-                                    Loading ->
-                                        []
-
-                                    LoadingSlowly ->
-                                        [ Loading.icon ]
-
-                                    Loaded ( commentText, comments ) ->
-                                        -- Don't let users add comments until they can
-                                        -- see the existing comments! Otherwise you
-                                        -- may be about to repeat something that's
-                                        -- already been said.
-                                        viewAddComment slug commentText (Session.viewer model.session)
-                                            :: List.map (viewComment model.timeZone slug) comments
-
-                                    Failed ->
-                                        [ Loading.error "comments" ]
-                            ]
+                            [ viewCommentsSection ]
                         ]
                     ]
             }
@@ -204,7 +252,12 @@ viewAddComment slug commentText maybeViewer =
                         Sending str ->
                             ( str, [ disabled True ] )
             in
-            Html.form [ class "card comment-form", onSubmit (ClickedPostComment cred slug) ]
+            Html.form
+                [ class "card comment-form"
+                , slug
+                    |> ClickedPostComment cred
+                    |> onSubmit
+                ]
                 [ div [ class "card-block" ]
                     [ textarea
                         [ class "form-control"
@@ -291,11 +344,22 @@ viewComment timeZone slug comment =
             [ p [ class "card-text" ] [ text (Comment.body comment) ] ]
         , div [ class "card-footer" ]
             [ a [ class "comment-author", href "" ]
-                [ img [ class "comment-author-img", Avatar.src (Profile.avatar profile) ] []
+                [ img
+                    [ class "comment-author-img"
+                    , profile
+                        |> Profile.avatar
+                        |> Avatar.src
+                    ]
+                    []
                 , text " "
                 ]
             , text " "
-            , a [ class "comment-author", Route.href (Route.Profile authorUsername) ]
+            , a
+                [ class "comment-author"
+                , authorUsername
+                    |> Route.Profile
+                    |> Route.href
+                ]
                 [ text (Username.toString authorUsername) ]
             , span [ class "date-posted" ] [ text timestamp ]
             , deleteCommentButton
@@ -350,7 +414,9 @@ update msg model =
             )
 
         CompletedLoadComments (Ok comments) ->
-            ( { model | comments = Loaded ( Editing "", comments ) }, Cmd.none )
+            ( { model | comments = Loaded ( Editing "", comments ) }
+            , Cmd.none
+            )
 
         CompletedLoadComments (Err error) ->
             ( { model | article = Failed }, Log.error )
@@ -378,7 +444,14 @@ update msg model =
         CompletedFollowChange (Ok newAuthor) ->
             case model.article of
                 Loaded article ->
-                    ( { model | article = Loaded (Article.mapAuthor (\_ -> newAuthor) article) }, Cmd.none )
+                    ( { model
+                        | article =
+                            article
+                                |> Article.mapAuthor (\_ -> newAuthor)
+                                |> Loaded
+                      }
+                    , Cmd.none
+                    )
 
                 _ ->
                     ( model, Log.error )
@@ -425,7 +498,10 @@ update msg model =
         CompletedPostComment (Ok comment) ->
             case model.comments of
                 Loaded ( _, comments ) ->
-                    ( { model | comments = Loaded ( Editing "", comment :: comments ) }
+                    ( { model
+                        | comments =
+                            Loaded ( Editing "", comment :: comments )
+                      }
                     , Cmd.none
                     )
 
@@ -447,7 +523,10 @@ update msg model =
         CompletedDeleteComment id (Ok ()) ->
             case model.comments of
                 Loaded ( commentText, comments ) ->
-                    ( { model | comments = Loaded ( commentText, withoutComment id comments ) }
+                    ( { model
+                        | comments =
+                            Loaded ( commentText, withoutComment id comments )
+                      }
                     , Cmd.none
                     )
 
@@ -466,7 +545,9 @@ update msg model =
             )
 
         CompletedDeleteArticle (Ok ()) ->
-            ( model, Route.replaceUrl (Session.navKey model.session) Route.Home )
+            ( model
+            , Route.replaceUrl (Session.navKey model.session) Route.Home
+            )
 
         CompletedDeleteArticle (Err error) ->
             ( { model | errors = Api.addServerError model.errors }
@@ -535,7 +616,12 @@ toSession model =
 -- INTERNAL
 
 
-fave : (Slug -> Cred -> Http.Request (Article Preview)) -> Cred -> Slug -> Body -> Cmd Msg
+fave :
+    (Slug -> Cred -> Http.Request (Article Preview))
+    -> Cred
+    -> Slug
+    -> Body
+    -> Cmd Msg
 fave toRequest cred slug body =
     toRequest slug cred
         |> Http.toTask
@@ -561,13 +647,24 @@ favoriteButton cred article =
             Article.body article
 
         kids =
-            [ text (" Favorite Article (" ++ String.fromInt favoritesCount ++ ")") ]
+            [ text
+                (" Favorite Article ("
+                    ++ String.fromInt favoritesCount
+                    ++ ")"
+                )
+            ]
     in
     if favorited then
-        Article.unfavoriteButton cred (ClickedUnfavorite cred slug body) [] kids
+        Article.unfavoriteButton cred
+            (ClickedUnfavorite cred slug body)
+            []
+            kids
 
     else
-        Article.favoriteButton cred (ClickedFavorite cred slug body) [] kids
+        Article.favoriteButton cred
+            (ClickedFavorite cred slug body)
+            []
+            kids
 
 
 deleteButton : Cred -> Article a -> Html Msg
@@ -582,5 +679,11 @@ deleteButton cred article =
 
 editButton : Article a -> Html Msg
 editButton article =
-    a [ class "btn btn-outline-secondary btn-sm", Route.href (Route.EditArticle (Article.slug article)) ]
+    a
+        [ class "btn btn-outline-secondary btn-sm"
+        , article
+            |> Article.slug
+            |> Route.EditArticle
+            |> Route.href
+        ]
         [ i [ class "ion-edit" ] [], text " Edit Article" ]
