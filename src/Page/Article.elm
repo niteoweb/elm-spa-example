@@ -317,24 +317,19 @@ viewAddComment slug commentText maybeViewer =
                             []
                         ]
                     , div [ class "card-footer" ]
-                        [ Grid.row []
-                            [ Grid.col [ Col.xl1 ]
-                                [ img
-                                    [ class "comment-author-img"
-                                    , class "img-fluid"
-                                    , class "rounded-circle"
-                                    , Avatar.src avatar
-                                    ]
-                                    []
-                                ]
-                            , Grid.col [ Col.xl11 ]
-                                [ button
-                                    (class "btn btn-sm btn-primary"
-                                        :: buttonAttrs
-                                    )
-                                    [ text "Post Comment" ]
-                                ]
+                        [ img
+                            [ class "comment-author-img"
+                            , class "img-fluid"
+                            , class "rounded-circle"
+                            , Avatar.src avatar
                             ]
+                            []
+                        , text " "
+                        , button
+                            (class "btn btn-sm btn-primary"
+                                :: buttonAttrs
+                            )
+                            [ text "Post Comment" ]
                         ]
                     ]
                 ]
@@ -405,29 +400,46 @@ viewComment timeZone slug comment =
             Timestamp.format timeZone (Comment.createdAt comment)
     in
     Grid.col [ Col.xl12 ]
-        [ div [ class "card" ]
-            [ div [ class "card-block" ]
+        [ div
+            [ class "card"
+            , class "my-3"
+            ]
+            [ div
+                [ class "card-block"
+                , class "p-3"
+                ]
                 [ p [ class "card-text" ] [ text (Comment.body comment) ] ]
-            , div [ class "card-footer" ]
-                [ a [ class "comment-author", href "" ]
+            , div
+                [ class "card-footer" ]
+                [ a
+                    [ class "comment-author", href "" ]
                     [ img
                         [ class "comment-author-img"
+                        , class "img-fluid"
+                        , class "rounded-circle"
                         , profile
                             |> Profile.avatar
                             |> Avatar.src
                         ]
                         []
-                    , text " "
                     ]
                 , text " "
                 , a
                     [ class "comment-author"
+                    , class "img-fluid"
+                    , class "rounded-circle"
                     , authorUsername
                         |> Route.Profile
                         |> Route.href
                     ]
                     [ text (Username.toString authorUsername) ]
-                , span [ class "date-posted" ] [ text timestamp ]
+                , text " "
+                , small
+                    [ class "date-posted"
+                    , class "text-muted"
+                    ]
+                    [ text timestamp ]
+                , text " "
                 , deleteCommentButton
                 ]
             ]
