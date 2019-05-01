@@ -1,4 +1,13 @@
-module Article.Feed exposing (Model, Msg, decoder, init, update, viewArticles, viewPagination, viewTabs)
+module Article.Feed exposing
+    ( Model
+    , Msg
+    , decoder
+    , init
+    , update
+    , viewArticles
+    , viewPagination
+    , viewTabs
+    )
 
 import Api exposing (Cred)
 import Article exposing (Article, Preview)
@@ -15,7 +24,16 @@ import Bootstrap.Utilities.Flex as Flex
 import Bootstrap.Utilities.Spacing as Spacing
 import Frame
 import Html exposing (..)
-import Html.Attributes exposing (attribute, class, classList, href, id, placeholder, src)
+import Html.Attributes
+    exposing
+        ( attribute
+        , class
+        , classList
+        , href
+        , id
+        , placeholder
+        , src
+        )
 import Html.Events exposing (onClick)
 import Http
 import Json.Decode as Decode exposing (Decoder)
@@ -32,15 +50,16 @@ import Username exposing (Username)
 
 
 {-| NOTE: This module has its own Model, view, and update. This is not normal!
-If you find yourself doing this often, please watch <https://www.youtube.com/watch?v=DoA4Txr4GUs>
+If you find yourself doing this often, please watch
+<https://www.youtube.com/watch?v=DoA4Txr4GUs>
 
 This is the reusable Article Feed that appears on both the Home page as well as
-on the Profile page. There's a lot of logic here, so it's more convenient to use
-the heavyweight approach of giving this its own Model, view, and update.
+on the Profile page. There's a lot of logic here, so it's more convenient to
+use the heavyweight approach of giving this its own Model, view, and update.
 
-This means callers must use Html.map and Cmd.map to use this thing, but in
-this case that's totally worth it because of the amount of logic wrapped up
-in this thing.
+This means callers must use Html.map and Cmd.map to use this thing, but in this
+case that's totally worth it because of the amount of logic wrapped up in this
+thing.
 
 For every other reusable view in this application, this API would be totally
 overkill, so we use simpler APIs instead.
@@ -122,10 +141,14 @@ viewPreview maybeCred timeZone article =
 
                         viewButton =
                             if favorited then
-                                Article.unfavoriteButton cred (ClickedUnfavorite cred slug)
+                                slug
+                                    |> ClickedUnfavorite cred
+                                    |> Article.unfavoriteButton cred
 
                             else
-                                Article.favoriteButton cred (ClickedFavorite cred slug)
+                                slug
+                                    |> ClickedFavorite cred
+                                    |> Article.favoriteButton cred
                     in
                     viewButton [ class "pull-xs-right" ]
                         [ text (" " ++ String.fromInt favoritesCount) ]
@@ -276,12 +299,22 @@ update maybeCred msg (Model model) =
             fave Article.unfavorite cred slug model
 
         CompletedFavorite (Ok article) ->
-            ( Model { model | articles = PaginatedList.map (replaceArticle article) model.articles }
+            ( Model
+                { model
+                    | articles =
+                        PaginatedList.map
+                            (replaceArticle article)
+                            model.articles
+                }
             , Cmd.none
             )
 
         CompletedFavorite (Err error) ->
-            ( Model { model | errors = Api.addServerError model.errors }
+            ( Model
+                { model
+                    | errors =
+                        Api.addServerError model.errors
+                }
             , Cmd.none
             )
 
@@ -309,14 +342,22 @@ decoder maybeCred resultsPerPage =
 pageCountDecoder : Int -> Decoder Int
 pageCountDecoder resultsPerPage =
     Decode.int
-        |> Decode.map (\total -> ceiling (toFloat total / toFloat resultsPerPage))
+        |> Decode.map
+            (\total ->
+                ceiling (toFloat total / toFloat resultsPerPage)
+            )
 
 
 
 -- INTERNAL
 
 
-fave : (Slug -> Cred -> Http.Request (Article Preview)) -> Cred -> Slug -> Internals -> ( Model, Cmd Msg )
+fave :
+    (Slug -> Cred -> Http.Request (Article Preview))
+    -> Cred
+    -> Slug
+    -> Internals
+    -> ( Model, Cmd Msg )
 fave toRequest cred slug model =
     ( Model model
     , toRequest slug cred
