@@ -136,7 +136,12 @@ view model =
                             []
 
                 viewCommentsSection =
-                    div [ class "col-xs-12 col-md-8 offset-md-2" ] <|
+                    Grid.col
+                        [ Col.xs12
+                        , Col.md8
+                        , Col.offsetMd2
+                        ]
+                    <|
                         -- Don't render the comments until the article has
                         -- loaded!
                         case model.comments of
@@ -151,11 +156,19 @@ view model =
                                 -- see the existing comments!  Otherwise you
                                 -- may be about to repeat something that's
                                 -- already been said.
-                                (model.session
-                                    |> Session.viewer
-                                    |> viewAddComment slug commentText
-                                )
-                                    :: viewComments comments
+                                [ Grid.container
+                                    []
+                                    [ Grid.row
+                                        []
+                                        [ model.session
+                                            |> Session.viewer
+                                            |> viewAddComment slug commentText
+                                        ]
+                                    , comments
+                                        |> viewComments
+                                        |> Grid.row []
+                                    ]
+                                ]
 
                             Failed ->
                                 [ Loading.error "comments" ]
@@ -246,9 +259,7 @@ view model =
                             ]
                         , Grid.row
                             []
-                            [ Grid.col [ Col.xl12 ]
-                                [ viewCommentsSection ]
-                            ]
+                            [ viewCommentsSection ]
                         ]
             in
             { title = title
@@ -269,7 +280,7 @@ view model =
             { title = "Article", content = Loading.error "article" }
 
 
-viewAddComment : Slug -> CommentText -> Maybe Viewer -> Html Msg
+viewAddComment : Slug -> CommentText -> Maybe Viewer -> Grid.Column Msg
 viewAddComment slug commentText maybeViewer =
     case maybeViewer of
         Just viewer ->
@@ -288,36 +299,54 @@ viewAddComment slug commentText maybeViewer =
                         Sending str ->
                             ( str, [ disabled True ] )
             in
-            Html.form
-                [ class "card comment-form"
-                , slug
-                    |> ClickedPostComment cred
-                    |> onSubmit
-                ]
-                [ div [ class "card-block" ]
-                    [ textarea
-                        [ class "form-control"
-                        , placeholder "Write a comment..."
-                        , attribute "rows" "3"
-                        , onInput EnteredCommentText
-                        , value commentStr
-                        ]
-                        []
+            Grid.col []
+                [ Html.form
+                    [ class "card comment-form"
+                    , slug
+                        |> ClickedPostComment cred
+                        |> onSubmit
                     ]
-                , div [ class "card-footer" ]
-                    [ img [ class "comment-author-img", Avatar.src avatar ] []
-                    , button
-                        (class "btn btn-sm btn-primary" :: buttonAttrs)
-                        [ text "Post Comment" ]
+                    [ div [ class "card-block" ]
+                        [ textarea
+                            [ class "form-control"
+                            , placeholder "Write a comment..."
+                            , attribute "rows" "3"
+                            , onInput EnteredCommentText
+                            , value commentStr
+                            ]
+                            []
+                        ]
+                    , div [ class "card-footer" ]
+                        [ Grid.row []
+                            [ Grid.col [ Col.xl1 ]
+                                [ img
+                                    [ class "comment-author-img"
+                                    , class "img-fluid"
+                                    , class "rounded-circle"
+                                    , Avatar.src avatar
+                                    ]
+                                    []
+                                ]
+                            , Grid.col [ Col.xl11 ]
+                                [ button
+                                    (class "btn btn-sm btn-primary"
+                                        :: buttonAttrs
+                                    )
+                                    [ text "Post Comment" ]
+                                ]
+                            ]
+                        ]
                     ]
                 ]
 
         Nothing ->
-            p []
-                [ a [ Route.href Route.Login ] [ text "Sign in" ]
-                , text " or "
-                , a [ Route.href Route.Register ] [ text "sign up" ]
-                , text " to comment."
+            Grid.col []
+                [ p []
+                    [ a [ Route.href Route.Login ] [ text "Sign in" ]
+                    , text " or "
+                    , a [ Route.href Route.Register ] [ text "sign up" ]
+                    , text " to comment."
+                    ]
                 ]
 
 
@@ -343,7 +372,7 @@ viewButtons cred article author =
             ]
 
 
-viewComment : Time.Zone -> Slug -> Comment -> Html Msg
+viewComment : Time.Zone -> Slug -> Comment -> Grid.Column Msg
 viewComment timeZone slug comment =
     let
         author =
@@ -375,30 +404,32 @@ viewComment timeZone slug comment =
         timestamp =
             Timestamp.format timeZone (Comment.createdAt comment)
     in
-    div [ class "card" ]
-        [ div [ class "card-block" ]
-            [ p [ class "card-text" ] [ text (Comment.body comment) ] ]
-        , div [ class "card-footer" ]
-            [ a [ class "comment-author", href "" ]
-                [ img
-                    [ class "comment-author-img"
-                    , profile
-                        |> Profile.avatar
-                        |> Avatar.src
+    Grid.col [ Col.xl12 ]
+        [ div [ class "card" ]
+            [ div [ class "card-block" ]
+                [ p [ class "card-text" ] [ text (Comment.body comment) ] ]
+            , div [ class "card-footer" ]
+                [ a [ class "comment-author", href "" ]
+                    [ img
+                        [ class "comment-author-img"
+                        , profile
+                            |> Profile.avatar
+                            |> Avatar.src
+                        ]
+                        []
+                    , text " "
                     ]
-                    []
                 , text " "
+                , a
+                    [ class "comment-author"
+                    , authorUsername
+                        |> Route.Profile
+                        |> Route.href
+                    ]
+                    [ text (Username.toString authorUsername) ]
+                , span [ class "date-posted" ] [ text timestamp ]
+                , deleteCommentButton
                 ]
-            , text " "
-            , a
-                [ class "comment-author"
-                , authorUsername
-                    |> Route.Profile
-                    |> Route.href
-                ]
-                [ text (Username.toString authorUsername) ]
-            , span [ class "date-posted" ] [ text timestamp ]
-            , deleteCommentButton
             ]
         ]
 
