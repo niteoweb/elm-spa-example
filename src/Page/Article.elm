@@ -263,6 +263,15 @@ view model =
                             ]
                         , Grid.row
                             []
+                            [ Grid.col
+                                [ Col.xl12
+                                , Col.attrs [ class "text-center" ]
+                                ]
+                                [ buttons
+                                ]
+                            ]
+                        , Grid.row
+                            []
                             [ viewCommentsSection ]
                         ]
             in
