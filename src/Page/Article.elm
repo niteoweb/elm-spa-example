@@ -133,7 +133,7 @@ view model =
                             viewButtons cred article author
 
                         Nothing ->
-                            []
+                            div [] []
 
                 viewCommentsSection =
                     Grid.col
@@ -179,7 +179,10 @@ view model =
                 viewBanner =
                     div
                         [ class "banner"
-                        , Spacing.m5
+                        , class "bg-dark"
+                        , class "text-light"
+                        , Spacing.p5
+                        , Spacing.my5
                         ]
                         [ Grid.container []
                             [ Grid.row
@@ -192,7 +195,13 @@ view model =
                             , Grid.row
                                 []
                                 [ Grid.col
-                                    [ Col.xl1 ]
+                                    [ Col.xl12
+                                    , Col.attrs
+                                        [ class "d-flex"
+                                        , class "align-items-center"
+                                        , class "flex-wrap"
+                                        ]
+                                    ]
                                     [ a
                                         [ author
                                             |> Author.username
@@ -203,39 +212,34 @@ view model =
                                             [ profile
                                                 |> Profile.avatar
                                                 |> Avatar.src
-                                            , class "img-fluid rounded-circle"
+                                            , class "article-author-img"
+                                            , class "rounded-circle"
                                             ]
                                             []
                                         ]
-                                    ]
-                                , Grid.col
-                                    [ Col.xl11 ]
-                                    [ a
-                                        [ author
-                                            |> Author.username
-                                            |> Route.Profile
-                                            |> Route.href
+                                    , div
+                                        [ class "mx-3"
                                         ]
-                                        [ author
-                                            |> Author.username
-                                            |> Author.view
+                                        [ a
+                                            [ author
+                                                |> Author.username
+                                                |> Route.Profile
+                                                |> Route.href
+                                            ]
+                                            [ author
+                                                |> Author.username
+                                                |> Author.view
+                                            ]
+                                        , Html.br [] []
+                                        , span
+                                            [ class "text-muted small" ]
+                                            [ Timestamp.view
+                                                model.timeZone
+                                                createdAt
+                                            ]
                                         ]
-                                    , Html.br [] []
-                                    , span
-                                        [ class "text-muted small" ]
-                                        [ Timestamp.view
-                                            model.timeZone
-                                            createdAt
-                                        ]
+                                    , buttons
                                     ]
-                                ]
-                            , Grid.row
-                                []
-                                [ Grid.col
-                                    [ Col.xl12
-                                    , Col.attrs [ Spacing.my3 ]
-                                    ]
-                                    buttons
                                 ]
                             ]
                         ]
@@ -264,7 +268,8 @@ view model =
             in
             { title = title
             , content =
-                div [ class "page-article" ]
+                div
+                    [ class "page-article" ]
                     [ viewBanner
                     , viewContent
                     ]
@@ -345,26 +350,27 @@ viewAddComment slug commentText maybeViewer =
                 ]
 
 
-viewButtons : Cred -> Article Full -> Author -> List (Html Msg)
+viewButtons : Cred -> Article Full -> Author -> Html Msg
 viewButtons cred article author =
-    case author of
-        IsFollowing followedAuthor ->
-            [ Author.unfollowButton ClickedUnfollow cred followedAuthor
-            , text " "
-            , favoriteButton cred article
-            ]
+    div [ class "my-2" ] <|
+        case author of
+            IsFollowing followedAuthor ->
+                [ Author.unfollowButton ClickedUnfollow cred followedAuthor
+                , text " "
+                , favoriteButton cred article
+                ]
 
-        IsNotFollowing unfollowedAuthor ->
-            [ Author.followButton ClickedFollow cred unfollowedAuthor
-            , text " "
-            , favoriteButton cred article
-            ]
+            IsNotFollowing unfollowedAuthor ->
+                [ Author.followButton ClickedFollow cred unfollowedAuthor
+                , text " "
+                , favoriteButton cred article
+                ]
 
-        IsViewer _ _ ->
-            [ editButton article
-            , text " "
-            , deleteButton cred article
-            ]
+            IsViewer _ _ ->
+                [ editButton article
+                , text " "
+                , deleteButton cred article
+                ]
 
 
 viewComment : Time.Zone -> Slug -> Comment -> Grid.Column Msg
