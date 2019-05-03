@@ -177,7 +177,8 @@ viewBanner : Html msg
 viewBanner =
     div
         [ class "banner"
-        , Spacing.m5
+        , class "bg-success"
+        , Spacing.my5
         ]
         [ Grid.container []
             [ Grid.row
