@@ -161,28 +161,33 @@ viewPreview maybeCred timeZone article =
         [ Grid.row
             []
             [ Grid.col
-                [ Col.xl1 ]
-                [ a [ Route.href (Route.Profile username) ]
+                [ Col.attrs
+                    [ class "d-flex"
+                    , class "align-items-center"
+                    ]
+                ]
+                [ a
+                    [ Route.href (Route.Profile username)
+                    , class "mx-2"
+                    ]
                     [ img
                         [ Avatar.src (Profile.avatar profile)
-                        , class "img-fluid rounded-circle"
+                        , class "author-img"
+                        , class "img-fluid"
+                        , class "rounded-circle"
                         ]
                         []
                     ]
+                , text " "
+                , div [ class "flex-grow-1" ]
+                    [ Author.view username
+                    , Html.br [] []
+                    , span
+                        [ class "text-muted small" ]
+                        [ Timestamp.view timeZone createdAt ]
+                    ]
+                , faveButton
                 ]
-            , Grid.col
-                [ Col.xl9 ]
-                [ a
-                    [ Route.href (Route.Profile username) ]
-                    [ Author.view username ]
-                , Html.br [] []
-                , span
-                    [ class "text-muted small" ]
-                    [ Timestamp.view timeZone createdAt ]
-                ]
-            , Grid.col
-                [ Col.xl2, Col.textAlign Text.alignXsRight ]
-                [ faveButton ]
             ]
         , Grid.row
             []
