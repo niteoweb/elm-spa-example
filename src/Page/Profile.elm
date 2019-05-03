@@ -1,4 +1,12 @@
-module Page.Profile exposing (Model, Msg, init, subscriptions, toSession, update, view)
+module Page.Profile exposing
+    ( Model
+    , Msg
+    , init
+    , subscriptions
+    , toSession
+    , update
+    , view
+    )
 
 {-| An Author's profile.
 -}
@@ -121,7 +129,11 @@ fetchFeed session feedTabs username page =
                     Url.Builder.string "favorited" (Username.toString username)
 
         params =
-            firstParam :: PaginatedList.params { page = page, resultsPerPage = articlesPerPage }
+            firstParam
+                :: PaginatedList.params
+                    { page = page
+                    , resultsPerPage = articlesPerPage
+                    }
 
         expect =
             Feed.decoder maybeCred articlesPerPage
@@ -185,10 +197,16 @@ view model =
                                         text ""
 
                                     IsFollowing followedAuthor ->
-                                        Author.unfollowButton ClickedUnfollow cred followedAuthor
+                                        Author.unfollowButton
+                                            ClickedUnfollow
+                                            cred
+                                            followedAuthor
 
                                     IsNotFollowing unfollowedAuthor ->
-                                        Author.followButton ClickedFollow cred unfollowedAuthor
+                                        Author.followButton
+                                            ClickedFollow
+                                            cred
+                                            unfollowedAuthor
 
                             Nothing ->
                                 -- We can't follow if we're logged out
@@ -199,10 +217,21 @@ view model =
                     , div [ class "user-info" ]
                         [ div [ class "container" ]
                             [ div [ class "row" ]
-                                [ div [ class "col-xs-12 col-md-10 offset-md-1" ]
-                                    [ img [ class "user-img", Avatar.src (Profile.avatar profile) ] []
+                                [ div
+                                    [ class "col-xs-12 col-md-10 offset-md-1"
+                                    ]
+                                    [ img
+                                        [ class "user-img"
+                                        , Avatar.src (Profile.avatar profile)
+                                        ]
+                                        []
                                     , h4 [] [ Username.toHtml username ]
-                                    , p [] [ text (Maybe.withDefault "" (Profile.bio profile)) ]
+                                    , p []
+                                        [ profile
+                                            |> Profile.bio
+                                            |> Maybe.withDefault ""
+                                            |> text
+                                        ]
                                     , followButton
                                     ]
                                 ]
@@ -216,9 +245,14 @@ view model =
                                         [ div [ class "articles-toggle" ] <|
                                             List.concat
                                                 [ [ viewTabs model.feedTab ]
-                                                , Feed.viewArticles model.timeZone feed
+                                                , feed
+                                                    |> Feed.viewArticles model.timeZone
                                                     |> List.map (Html.map GotFeedMsg)
-                                                , [ Feed.viewPagination ClickedFeedPage model.feedPage feed ]
+                                                , [ Feed.viewPagination
+                                                        ClickedFeedPage
+                                                        model.feedPage
+                                                        feed
+                                                  ]
                                                 ]
                                         ]
                                     ]
