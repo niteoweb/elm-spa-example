@@ -178,7 +178,9 @@ viewBanner =
     div
         [ class "banner"
         , class "bg-success"
-        , Spacing.my5
+        , class "text-light"
+        , Spacing.mb5
+        , Spacing.py3
         ]
         [ Grid.container []
             [ Grid.row
