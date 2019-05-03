@@ -17,6 +17,11 @@ import Article exposing (Article, Preview)
 import Article.Feed as Feed
 import Author exposing (Author(..), FollowedAuthor, UnfollowedAuthor)
 import Avatar exposing (Avatar)
+import Bootstrap.Grid as Grid
+import Bootstrap.Grid.Col as Col
+import Bootstrap.Text as Text
+import Bootstrap.Utilities.Display as Display
+import Bootstrap.Utilities.Spacing as Spacing
 import Frame
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -214,14 +219,21 @@ view model =
                 in
                 div [ class "profile-page" ]
                     [ Frame.viewErrors ClickedDismissErrors model.errors
-                    , div [ class "user-info" ]
-                        [ div [ class "container" ]
-                            [ div [ class "row" ]
-                                [ div
-                                    [ class "col-xs-12 col-md-10 offset-md-1"
+                    , div
+                        [ class "user-info"
+                        , class "my-5"
+                        ]
+                        [ Grid.container []
+                            [ Grid.row []
+                                [ Grid.col
+                                    [ Col.xs12
+                                    , Col.md10
+                                    , Col.offsetMd1
+                                    , Col.textAlign Text.alignXsCenter
                                     ]
                                     [ img
                                         [ class "user-img"
+                                        , class "rounded-circle"
                                         , Avatar.src (Profile.avatar profile)
                                         ]
                                         []
