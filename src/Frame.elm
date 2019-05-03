@@ -82,7 +82,7 @@ viewHeader :
     -> Html msg
 viewHeader navbarIndicator navbarConfig navbarState maybeViewer =
     navbarConfig
-        |> Navbar.dark
+        |> Navbar.lightCustomClass "bg-transparent"
         |> Navbar.container
         |> Navbar.collapseSmall
         |> Navbar.withAnimation
