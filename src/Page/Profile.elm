@@ -234,6 +234,7 @@ view model =
                                     [ img
                                         [ class "user-img"
                                         , class "rounded-circle"
+                                        , class "my-2"
                                         , Avatar.src (Profile.avatar profile)
                                         ]
                                         []
